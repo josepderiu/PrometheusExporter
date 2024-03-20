@@ -1,0 +1,26 @@
+version: "3"
+
+services:
+  api:
+    image: ${DOCKER_REGISTRY-}api
+    hostname: api
+    build:
+      context: .
+      dockerfile: ./Host/Dockerfile
+    networks:
+      - localnet
+
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - 9090:9090
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+    networks:
+      - localnet
+
+networks:
+  localnet:
+    driver: bridge
