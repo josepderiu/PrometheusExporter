@@ -50,10 +50,7 @@ app.MapGet("/weatherforecast", () =>
     .WithName("GetWeatherForecast")
     .WithOpenApi();
 
-app.UseEndpoints(endpoints =>
-{
-    endpoints.MapMetrics();
-});
+app.MapMetrics();
 
 app.Run();
 
