@@ -17,12 +17,7 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+app.WithOpenApi();
 
 app.UseHttpsRedirection();
 
@@ -30,27 +25,11 @@ app.UseRouting();
 
 app.UseHttpMetrics();
 
-var summaries = new[]
-{
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
-
-app.MapGet("/weatherforecast", () =>
-    {
-        var forecast = Enumerable.Range(1, 5).Select(index =>
-                new WeatherForecast
-                (
-                    DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-                    Random.Shared.Next(-20, 55),
-                    summaries[Random.Shared.Next(summaries.Length)]
-                ))
-            .ToArray();
-        return forecast;
-    })
-    .WithName("GetWeatherForecast")
-    .WithOpenApi();
-
 app.MapMetrics();
+
+app.MapHealthChecks("/healthz");
+
+app.UseServiceEndpoints();
 
 app.Run();
 
@@ -66,5 +45,42 @@ public sealed class SampleHealthCheck : IHealthCheck
         CancellationToken cancellationToken = default)
     {
         return Task.FromResult(HealthCheckResult.Healthy());
+    }
+}
+
+public static class WebApplicationExtensions
+{
+    public static WebApplication WithOpenApi(this WebApplication app)
+    {
+        // Configure the HTTP request pipeline.
+        if (app.Environment.IsDevelopment())
+        {
+            app.UseSwagger();
+            app.UseSwaggerUI();
+        }
+
+        return app;
+    }
+
+    public static WebApplication UseServiceEndpoints(this WebApplication app)
+    {
+        var summaries = new[] { "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching" };
+
+        app.MapGet("/weatherforecast", () =>
+            {
+                var forecast = Enumerable.Range(1, 5).Select(index =>
+                        new WeatherForecast
+                        (
+                            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
+                            Random.Shared.Next(-20, 55),
+                            summaries[Random.Shared.Next(summaries.Length)]
+                        ))
+                    .ToArray();
+                return forecast;
+            })
+            .WithName("GetWeatherForecast")
+            .WithOpenApi();
+
+        return app;
     }
 }
